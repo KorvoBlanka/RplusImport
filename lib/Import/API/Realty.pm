@@ -48,8 +48,6 @@ sub list {
     my @query;
     {
       if ($last_ts) {
-        push @query, \("t1.state_change_date > now() - interval '1 hours'");
-      } else {
         push @query, state_change_date => {gt => $last_ts};
       }
 
@@ -69,7 +67,7 @@ sub list {
           @query,
           delete_date => undef
         ],
-        sort_by => ['realty.id asc', ],
+        sort_by => ['realty.id desc', ],
         page => $page,
         per_page => $per_page
     );
