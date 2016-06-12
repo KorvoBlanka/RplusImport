@@ -1,0 +1,63 @@
+#!/usr/bin/env perl
+
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+
+use Import::Modern;
+
+use Import::Model::Realty::Manager;
+use Import::Model::Photo::Manager;
+
+use Import::Util::Config;
+
+use Data::Dumper;
+
+say 'cleaning up realty';
+clean_up();
+
+sub clean_up {
+    my $r_count = 0;
+    my $p_count = 0;
+
+    my $config = Import::Util::Config::get_config();
+    my $storage_path = $config->{storage}->{path};
+
+    if (1) {
+      my $realty_iter = Import::Model::Realty::Manager->get_objects_iterator(
+        query => [
+          \("state_change_date < now() - interval '700 day'")
+        ],
+      );
+
+      while (my $r = $realty_iter->next) {
+          my $path = $storage_path.'/photos/'.$r->id.'/*';
+
+          my $t = Import::Model::Photo::Manager->delete_objects(
+              where => [realty_id => $r->id],
+          );
+
+          if ($t > 0) {
+            say $path;
+            unlink glob $path;
+          }
+
+          $p_count += $t;
+          #my $photo_iter = Import::Model::Photo::Manager->get_objects_iterator(query => [realty_id => $r->id]);
+          #while (my $p = $photo_iter->next) {
+          #   $p_count ++;
+          #   my $path = $storage_path.'/photos/'.$r->id;
+          #}
+      }
+    }
+
+    $r_count = Import::Model::Realty::Manager->delete_objects (
+      where => [
+        \("state_change_date < now() - interval '800 day'")
+      ],
+    );
+
+    say $r_count . ' objects';
+    say $p_count . ' photos';
+
+    return 0;
+}

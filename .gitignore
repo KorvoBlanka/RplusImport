@@ -1,4 +1,5 @@
 app.conf
 lib/Rplus/DB.pm
+lib/Rplus/Model
 log/
-script/
+script/media

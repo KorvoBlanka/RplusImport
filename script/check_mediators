@@ -1,0 +1,59 @@
+#!/usr/bin/env perl
+
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+
+use Import::Modern;
+
+use Import::Model::Realty;
+use Import::Model::Realty::Manager;
+use Import::Model::Mediator;
+use Import::Model::Mediator::Manager;
+use Import::Model::MediatorCompany;
+use Import::Model::MediatorCompany::Manager;
+
+use Data::Dumper;
+
+use Import::Util::Mediator qw(delete_mediator);
+
+say 'checking realty';
+say remove_mediators() . ' objects updated';
+
+sub check_mediators {
+    my $filename = 'not_med.txt';
+    open(my $fh, '>', $filename) or die "Не могу открыть '$filename' $!";
+
+    my %count_hash = ();
+    my $mediator_iter = Import::Model::Mediator::Manager->get_objects_iterator(query => [delete_date => undef],);
+    while (my $x = $mediator_iter->next) {
+        my $count = Import::Model::Realty::Manager->get_objects_count(query => [\("owner_phones && '{" . $x->phone_num . "}'"), delete_date => undef,]);
+        $count_hash{$count} = 0 unless $count_hash{$count};
+        $count_hash{$count} += 1;
+        if ($count < 4) {
+            print $fh $x->phone_num . "\n";
+        }
+    }
+
+    #say '0 : ' . $count_hash{0};
+    #say '1 : ' . $count_hash{1};
+    #say '2 : ' . $count_hash{2};
+    #say '3 : ' . $count_hash{3};
+
+    close $fh;
+
+    return 0;
+}
+
+sub remove_mediators {
+    my $m_count = 0;
+    my $mediator_iter = Import::Model::Mediator::Manager->get_objects_iterator(query => [delete_date => undef],);
+    while (my $x = $mediator_iter->next) {
+        my $count = Import::Model::Realty::Manager->get_objects_count(query => [\("owner_phones && '{" . $x->phone_num . "}'"), delete_date => undef,]);
+        if ($count < 4) {
+            $m_count ++;
+            delete_mediator($x->id);
+        }
+    }
+
+    return $m_count;
+}

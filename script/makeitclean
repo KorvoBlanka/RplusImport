@@ -1,0 +1,24 @@
+package RplusMgmt::Task::Landmarks;
+
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+
+use Rplus::Modern;
+
+use Rplus::DB;
+
+
+my $dbh = Rplus::DB->new_or_cached->dbh;
+
+$dbh->do(q{VACUUM PLAN ON realty IN rplus_import_dev;});
+$dbh->do(q{VACUUM PLAN ON media_import_history IN rplus_import_dev;});
+
+$dbh->do(q{VACUUM PLAN ON realty IN rplus_makler;});
+
+$dbh->do(q{VACUUM PLAN ON realty IN rplus_accounts;});
+
+$dbh->do(q{VACUUM PLAN ON realty IN rplus_pcn;});
+
+$dbh->do(q{VACUUM PLAN ON realty IN rplus_zodiac;});
+
+1;
