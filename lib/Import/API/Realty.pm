@@ -67,7 +67,7 @@ sub list {
           @query,
           delete_date => undef
         ],
-        sort_by => ['realty.id desc', ],
+        sort_by => ['realty.id asc', ],
         page => $page,
         per_page => $per_page
     );
