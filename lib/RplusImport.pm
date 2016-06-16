@@ -39,7 +39,7 @@ sub startup {
 
     # DB helper
     $self->helper(db => sub { Rplus::DB->new_or_cached });
-        
+
     # DateTime formatter helper
     $self->helper(format_datetime => sub {
         my ($self, $dt) = @_;
@@ -108,7 +108,7 @@ sub startup {
     $r->get('/')->to(template => 'main/index');
 
     # API namespace
-    $r->route('/api/:controller')->bridge->to(cb => sub {
+    $r->route('/api/:controller')->under->to(cb => sub {
         my $self = shift;
         return 1;
     })->route('/:action')->to(namespace => 'Import::API');

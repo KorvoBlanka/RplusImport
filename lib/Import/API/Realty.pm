@@ -80,31 +80,4 @@ sub list {
     return $self->render(json => $res);
 }
 
-sub get_photos {
-    my $self = shift;
-
-    my $realty_id = $self->param('realty_id');
-    my $realty = Import::Model::Realty::Manager->get_objects(select => 'id, agent_id', query => [id => $realty_id, delete_date => undef])->[0];
-    return $self->render(json => {error => 'Not Found'}, status => 404) unless $realty;
-
-    my $res = {
-        count => 0,
-        list => [],
-    };
-
-    my $photo_iter = Import::Model::Photo::Manager->get_objects_iterator(query => [realty_id => $realty_id, delete_date => undef], sort_by => 'id');
-    while (my $photo = $photo_iter->next) {
-        my $x = {
-            id => $photo->id,
-            photo_url => $self->config->{'storage'}->{'url'}.'/photos/'.$photo->realty_id.'/'.$photo->filename,
-            thumbnail_url => $self->config->{'storage'}->{'url'}.'/photos/'.$photo->realty_id.'/'.$photo->thumbnail_filename,
-        };
-        push @{$res->{list}}, $x;
-    }
-
-    $res->{count} = scalar @{$res->{list}};
-
-    return $self->render(json => $res);
-}
-
 1;

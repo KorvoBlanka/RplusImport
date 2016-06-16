@@ -20,7 +20,6 @@ use Mojo::Collection;
 use Mojo::UserAgent;
 use Mojo::ByteStream;
 
-use Import::Util::Image;
 use Data::Dumper;
 
 no warnings 'experimental::smartmatch';
@@ -77,22 +76,12 @@ sub upload_result {
         }
     }
 
-    if ($addr) {
-        $data->{'address'} = $addr;
-    }
-
     say Dumper $data;
 
-    my $realty = Import::Model::Realty->new((map { $_ => $data->{$_} } grep { $_ ne 'addr' && $_ ne 'photos' && $_ ne 'mediator_company' } keys %$data), state_code => 'raw');
+    my $realty = Import::Model::Realty->new((map { $_ => $data->{$_} } grep { $_ ne 'mediator_company' } keys %$data), state_code => 'raw');
     $realty->save;
     my $id = $realty->id;
     say "Saved new realty: $id";
-
-    foreach (@{$photos}) {
-        my $image = $ua->get($_)->res->content->asset;
-        say 'Loading img ' . $_;
-        Import::Util::Image::load_image($id, $image, , $self->config->{storage}->{path}, $self->config->{import}->{avito}->{crop_image_y});
-    }
 
     return $self->render(json => {state => 'ok', id => $id, m_flag => $m_flag,});
 }
