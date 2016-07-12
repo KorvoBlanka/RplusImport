@@ -3,6 +3,8 @@ package Import::Util::Config;
 use Cwd qw/abs_path/;
 use Mojo::Asset::File;
 
+use Data::Dumper;
+
 sub get_config {
     # get path to Config.pm, then build a path to app.conf
     my $module = __PACKAGE__;
@@ -10,9 +12,11 @@ sub get_config {
     my $path = $INC{$module . '.pm'};
     $path =~ s{^(.*/)[^/]*$}{$1};
     $path = abs_path($path . '/../../../app.conf');
-    
+
     my $file = Mojo::Asset::File->new(path => $path);
+
     my $config = eval $file->slurp;
+
     return $config;
 }
 
