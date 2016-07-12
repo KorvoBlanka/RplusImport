@@ -28,23 +28,15 @@ no warnings 'experimental';
 
 
 my $config = Import::Util::Config::get_config();
-my $avito_config = $config->{import}->{avito};
-my $avito_url = $avito_config->{avito_url};
+my $site_config = $config->{import}->{avito};
 
+my $site_url = $site_config->{url};
+my $host = $site_config->{host};
+my $source_list = $site_config->{source_list};
 
-my $sell_flats_url = $avito_url . $avito_config->{sell_flats_url};
-my $sell_rooms_url = $avito_url . $avito_config->{sell_rooms_url};
-my $sell_houses_url = $avito_url . $avito_config->{sell_houses_url};
-my $sell_land_url = $avito_url . $avito_config->{sell_land_url};
-my $sell_commercial_url = $avito_url . $avito_config->{sell_commercial_url};
-
-
-my $rent_flats_url = $avito_url . $avito_config->{rent_flats_url};
-my $rent_rooms_url = $avito_url . $avito_config->{rent_rooms_url};
-my $rent_houses_url = $avito_url . $avito_config->{rent_houses_url};
-my $rent_land_url = $avito_url . $avito_config->{rent_land_url};
-my $rent_commercial_url = $avito_url . $avito_config->{rent_commercial_url};
-
+my $pause_category = $site_config->{pause_category};
+my $pause_item = $site_config->{pause_item};
+my $depth = $site_config->{depth};
 
 my $parser = DateTime::Format::Strptime->new(pattern => '%Y-%m-%d %H:%M:%S');
 
@@ -66,64 +58,11 @@ sub process_avito {
     my $user = shift;   # avito user argument: 1 - частн. 2 - агенство
     my @url_list;
 
-    # rent land
-    @url_list = get_url_list($rent_land_url, $user, 2);
-    put_to_queue(\@url_list, 'land', 'rent');
-
-    sleep 15;
-
-    @url_list = get_url_list($sell_commercial_url, $user, 2);
-    put_to_queue(\@url_list, 'commercial', 'sale');
-
-    sleep 15;
-
-    @url_list = get_url_list($rent_commercial_url, $user, 2);
-    put_to_queue(\@url_list, 'commercial', 'rent');
-
-    sleep 15;
-
-
-    # sell flats
-    @url_list = get_url_list($sell_flats_url, $user, 5);
-    put_to_queue(\@url_list, 'apartment', 'sale');
-
-    sleep 15;
-
-    # rent flats
-    @url_list = get_url_list($rent_flats_url, $user, 5);
-    put_to_queue(\@url_list, 'apartment', 'rent');
-
-    sleep 15;
-
-    # sell rooms
-    @url_list = get_url_list($sell_rooms_url, $user, 2);
-    put_to_queue(\@url_list, 'room', 'sale');
-
-    sleep 15;
-
-    # rent rooms
-    @url_list = get_url_list($rent_rooms_url, $user, 5);
-    put_to_queue(\@url_list, 'room', 'rent');
-
-    sleep 15;
-
-    # sell houses
-    @url_list = get_url_list($sell_houses_url, $user, 2);
-    put_to_queue(\@url_list, 'house', 'sale');
-
-    sleep 15;
-
-    # rent houses
-    @url_list = get_url_list($rent_houses_url, $user, 2);
-    put_to_queue(\@url_list, 'house', 'rent');
-
-    sleep 15;
-
-    # sell land
-    @url_list = get_url_list($sell_land_url, $user, 2);
-    put_to_queue(\@url_list, 'land', 'sale');
-
-    sleep 15;
+    foreach (@{$source_list}) {
+        @url_list = get_url_list($site_url . $_->{url}, $user, $depth);
+        put_to_queue(\@url_list);
+        sleep $pause_category;
+    }
 }
 
 sub get_url_list {
@@ -168,7 +107,7 @@ sub get_url_list {
 }
 
 sub put_to_queue {
-    my ($list_ref, $category_code, $offer_type) = @_;
+    my ($list_ref) = @_;
 
     for my $item (@$list_ref) {
 
@@ -180,7 +119,7 @@ sub put_to_queue {
 
         # Сохраним историю
         if (!Import::Model::MediaImportHistory::Manager->get_objects_count(query => [media_id => $MEDIA->id, media_num => $eid])) {
-            Import::Model::MediaImportHistory->new(media_id => $MEDIA->id, media_num => $eid, media_text => $avito_url . $item_url, realty_id => $record->id)->save;
+            Import::Model::MediaImportHistory->new(media_id => $MEDIA->id, media_num => $eid, media_text => $site_url . $item_url, realty_id => $record->id)->save;
         }
     }
 }
